@@ -1,0 +1,6 @@
+token.txt
+*.pyc
+__pycache__/
+.venv/
+data/index.faiss
+data/metadata.pkl

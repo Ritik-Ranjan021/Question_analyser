@@ -1,0 +1,5 @@
+Algebra: Solve for x: 2x + 3 = 7. Consider quadratic equations and factoring.
+
+Calculus: Differentiate sin(x^2) and find local maxima of f(x)=x^3-3x.
+
+Probability: A fair die is rolled twice. Find probability of sum being 7.

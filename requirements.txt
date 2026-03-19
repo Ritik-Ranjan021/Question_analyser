@@ -1,0 +1,10 @@
+faiss-cpu
+sentence-transformers
+transformers
+torch
+PyPDF2
+tqdm
+requests
+fastapi
+uvicorn[standard]
+python-multipart

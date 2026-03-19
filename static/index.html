@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Question Analyzer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#94a3b8;--accent:#7c3aed}
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#071021 0%, #07142a 100%);color:#e6eef8;margin:0;padding:28px}
+    .wrap{max-width:1100px;margin:0 auto}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    h1{margin:0;font-size:20px}
+    .sub{color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:18px;margin-top:18px}
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);padding:16px;border-radius:12px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px}
+    textarea{width:100%;height:120px;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;resize:vertical}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#4c1d95);border:none;color:white;font-weight:600;cursor:pointer}
+    .btn:disabled{opacity:0.6;cursor:not-allowed}
+    .small{font-size:13px;color:var(--muted)}
+    #retrieved{display:flex;flex-direction:column;gap:10px}
+    .card{background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);font-size:14px;color:#dbeafe}
+    pre{white-space:pre-wrap;background:linear-gradient(180deg, rgba(12,18,28,0.6), rgba(12,18,28,0.4));padding:14px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);color:#e6eef8;max-height:420px;overflow:auto}
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+    .spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.08);border-top-color:white;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media (max-width:900px){.grid{grid-template-columns:1fr} .panel{padding:12px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Question Analyzer</h1>
+        <div class="sub">Retrieve important concepts and practice questions from past-year exam content</div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div>
+        <div class="panel">
+          <label for="query">Enter a query</label>
+          <textarea id="query" placeholder="e.g. suggest important concepts and practice questions"></textarea>
+          <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+            <button id="run" class="btn">Suggest</button>
+            <div id="status" class="small">Ready</div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:14px">
+          <label>Suggestions</label>
+          <pre id="suggestions">No suggestions yet.</pre>
+        </div>
+      </div>
+
+      <aside>
+        <div class="panel">
+          <label>Retrieved passages</label>
+          <div id="retrieved"><div class="small">No results yet.</div></div>
+        </div>
+        <div class="panel" style="margin-top:12px">
+          <div class="small">Notes</div>
+          <div class="small" style="margin-top:8px;color:var(--muted)">This UI talks to the local backend. Build the index first with the CLI.</div>
+        </div>
+      </aside>
+    </div>
+
+    <footer>Quick tip: set <code style="color:#9ad1ff">HF_TOKEN</code> to use the Hugging Face Inference API and avoid local model downloads.</footer>
+  </div>
+
+  <script>
+    const runBtn = document.getElementById('run');
+    const statusEl = document.getElementById('status');
+    const suggestionsEl = document.getElementById('suggestions');
+    const retrievedEl = document.getElementById('retrieved');
+
+    async function suggest(){
+      const q = document.getElementById('query').value.trim();
+      if(!q) return alert('Enter a query');
+      runBtn.disabled = true;
+      statusEl.innerHTML = '<span class="spinner"></span> Searching';
+      suggestionsEl.textContent = '';
+      retrievedEl.innerHTML = '';
+      try{
+        const resp = await fetch('/api/suggest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})});
+        if(!resp.ok){
+          const txt = await resp.text();
+          suggestionsEl.textContent = 'Error: '+ resp.status + ' ' + txt;
+          statusEl.textContent = 'Error';
+          return;
+        }
+        const data = await resp.json();
+        if(data.retrieved && data.retrieved.length){
+          retrievedEl.innerHTML = '';
+          data.retrieved.forEach((p,i)=>{
+            const d = document.createElement('div'); d.className='card';
+            d.innerHTML = `<strong>Passage ${i+1}</strong><div style="height:8px"></div>` + p.slice(0,800);
+            retrievedEl.appendChild(d);
+          });
+        } else {
+          retrievedEl.innerHTML = '<div class="small">No passages found.</div>';
+        }
+        suggestionsEl.textContent = data.suggestions || 'No suggestions returned.';
+        statusEl.textContent = 'Done';
+      }catch(err){
+        suggestionsEl.textContent = 'Request failed: ' + err.message;
+        statusEl.textContent = 'Error';
+      } finally{
+        runBtn.disabled = false;
+      }
+    }
+
+    runBtn.addEventListener('click', suggest);
+    document.getElementById('query').addEventListener('keydown', (e)=>{ if(e.key==='Enter' && (e.ctrlKey || e.metaKey)) suggest(); });
+  </script>
+</body>
+</html>
