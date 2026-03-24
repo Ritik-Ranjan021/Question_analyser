@@ -1,5 +1,194 @@
-Algebra: Solve for x: 2x + 3 = 7. Consider quadratic equations and factoring.
+2023 – COMPILER DESIGN
+Eliminate left recursion and rewrite the grammar:
+A → Abd / Aad / a
+B → Be / b
 
-Calculus: Differentiate sin(x^2) and find local maxima of f(x)=x^3-3x.
+Transform the following grammar using left factoring:
+S → aEtS / aEtSeS / a
+B → Be / b
 
-Probability: A fair die is rolled twice. Find probability of sum being 7.
+Consider the following grammar:
+S → aB / bA
+S → aS / bAA / a
+B → bS / aBB / b
+Derive the string w = aaabbabbba using leftmost derivation.
+
+Write the LR(0) items of the grammar:
+A → XYZ
+
+Check whether the given grammar is ambiguous or not for the string 3 + 5:
+list → list + list | list − list | digit
+digit → 0 | 1 | 2 | … | 9
+
+State whether the following grammar is operator precedence or not. If not, convert it:
+E → EAE | (E) | −E | id
+A → + | − | *
+
+Differentiate between Kernel items and Non-Kernel items.
+
+Define Backpatching.
+
+Construct the DAG of the expression:
+a = a + b
+
+Write the three address code of the following:
+A = X + Y * Z
+
+Explain the various phases of compilation with suitable example.
+
+Write short notes on Context Free Grammar.
+
+Consider the grammar:
+S → ABC
+A → a
+B → b
+C → c
+Find leftmost and rightmost derivation for string w = abc.
+
+Consider the grammar:
+S → bB / aA
+A → b / bS / aAA
+B → a / aS / bBB
+For string w = bbaababa, find:
+(i) Leftmost derivation
+(ii) Rightmost derivation
+(iii) Parse Tree
+
+Consider the grammar:
+S → (L) | a
+L → L , S | S
+Parse the input string (a,(a,a)) using shift reduce parser.
+
+Construct predictive parsing table for the grammar:
+E → E + T | T
+T → T * F | F
+F → (E) | id
+
+Consider the operator precedence grammar:
+E → E + E | E − E | E * E | E / E | E ^ E | (E) | −E | id
+Calculate handle of the string id + id * id.
+
+Consider the augmented grammar:
+E' → E
+E → E + T | T
+T → T * F | F
+F → (E) | id
+If I is the set of items:
+{E' → .E , E → E . + T}
+Find Closure(I).
+
+Define the term Symbol Table. What are the different types of symbol table management techniques? Explain.
+
+Define Peephole Optimization. What are the different transformations? Explain.
+
+Differentiate between operator overloading and function overloading.
+
+What are the different types of storage management techniques? Explain.
+
+Write three address code for:
+a < b or c < d or e > f and not a
+
+What are the transformations performed on basic blocks?
+
+Draw quadruple and triple table for:
+−(a + b) + (c + d) − (a + d)
+
+Draw DAG and Syntax Tree for:
+a = (bX − c) + (bX − c)
+Also write three address code.
+
+Optimize the following source code:
+void quicksort(m, n)
+int m, n;
+{
+    int i, j;
+    int v, x;
+    if (n <= m) return;
+    i = m − 1; j = n; v = a[n];
+    while(1)
+    {
+        do i = i + 1; while (a[i] < v);
+        do j = j − 1; while (a[j] > v);
+        if (i >= j) break;
+        x = a[i]; a[i] = a[j]; a[j] = x;
+    }
+    x = a[i]; a[i] = a[n]; a[n] = x;
+    quicksort(m, j);
+    quicksort(i + 1, n);
+}
+
+Write short notes on:
+(i) Code Motion
+(ii) Reduction in Strength
+(iii) Copy Propagation
+(iv) Dead Code Elimination
+
+2022 – COMPILER DESIGN
+
+Explain the various phases of compilation with suitable example.
+
+Check whether the following grammar is ambiguous or not:
+E → E + E | E − E | E * E | E / E | E ^ E | (E) | id
+Also write leftmost and rightmost derivation of:
+id * id − id
+
+Define the components of Context Free Grammar with example.
+
+Explain operator precedence and associativity.
+
+Construct predictive parsing table for:
+E → E + T | T
+T → T * F | F
+F → (E) | id
+
+State whether the following grammar is operator precedence or not. If not convert it:
+E → EAE | (E) | −E | id
+A → + | − | *
+Also calculate handle of string:
+id + id * id
+
+Consider augmented grammar:
+E' → E
+E → E + T | T
+T → T * F | F
+F → (E) | id
+If I is:
+{E' → .E , E → .E + T}
+Find Closure(I).
+
+Define Parsing. What are different types of parsing methods?
+
+Define Symbol Table. What are different symbol table management techniques?
+
+Define Peephole Optimization. What are different transformations?
+
+Differentiate between Linear List and Open Hashing.
+
+What are storage management techniques? Explain.
+
+Define Backpatching.
+
+Write three address code for Boolean expression:
+g > f and m < n or z < x
+
+What are transformations performed on Basic Blocks?
+
+What are different types of Intermediate Code Generation?
+
+Define three address code and generate TAC for:
+a = b * −c + b * −c
+
+Draw quadruple and triple representation.
+
+Differentiate between DAG and Syntax Tree.
+
+Draw DAG and Syntax Tree for:
+i = i − 1
+
+Optimize the following code (quicksort same as above).
+
+Write short notes on:
+(i) Code Motion
+(ii) Reduction in Strength
+(iii) Dead Code Elimination
+(iv) Loop Optimization

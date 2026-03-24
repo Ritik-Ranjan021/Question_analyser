@@ -1,0 +1,160 @@
+Question Analyzer — RAG-based Study Planner
+
+Under esteemed guidance of:
+Professor / Mentor: ___________________________
+
+Presented by:
+- Ritik Ranjan Sahoo
+- Satyabrata Swain
+- Amitab Das
+- Srinibas Sahoo
+
+Batch: 2021-2026
+Program: Integrated MCA, Utkal University
+
+Content
+1. Introduction
+2. Project Motivation
+3. Objectives
+4. Overview of Related Systems
+5. System Architecture
+6. Software and Hardware Requirements
+7. Module Description
+8. Data Flow and Process Diagrams (high level)
+9. Database and Indexing Strategy
+10. UML and Interface Design
+11. Testing Strategy
+12. Sample Interaction Flows
+13. Summary and Future Scope
+14. References
+
+1. Introduction
+The "Question Analyzer" is a lightweight Retrieval-Augmented Generation (RAG) pipeline designed to help learners and instructors analyze past-year examination questions, extract the most important concepts, and automatically generate concise practice questions and curated learning resources. The system combines document ingestion and chunking, semantic embeddings, a vector similarity index, and a text generation layer to produce actionable study advice grounded in the real historical question data.
+
+This project implements an end-to-end local-first pipeline that can also leverage model-as-a-service providers for text generation. It is intended to be simple to run on a personal computer for small to medium datasets of exam papers, and easily extensible to cloud-based vector stores and inference APIs for larger-scale workloads.
+
+2. Project Motivation
+- Students preparing for university-level exams often have access to many past-year papers but lack structured insights about recurring topics and the most effective practice exercises.
+- Instructors want fast ways to generate practice material and identify syllabus areas with high emphasis across previous years.
+- Manual analysis of dozens of PDFs is time-consuming; automating semantic retrieval and question synthesis speeds up preparation and produces consistent, data-driven recommendations.
+
+3. Objectives
+- Ingest past-year question files (PDF, TXT) and convert them into searchable text chunks.
+- Produce dense semantic embeddings for each chunk and store them in a vector index for fast retrieval.
+- Given a user query (for example: "important concepts and practice questions"), retrieve the most relevant passages and generate:
+  - A ranked list of important concepts to learn
+  - A small set of practice questions inspired by the retrieved material
+  - A curated list of short resources (articles, tutorials, reference pages)
+- Offer both a command-line interface and a minimal web UI so users can interactively query the index.
+- Keep local operation feasible while providing an option to use remote inference (Hugging Face Inference API) to avoid large model downloads.
+
+4. Overview of Related Systems
+Existing study and recommendation platforms focus mainly on content delivery or collaborative learning. Examples:
+- Conventional exam repositories — provide raw PDFs and search by keyword, but lack semantic aggregation.
+- Generic Q&A and summarization tools — can summarize a single document but do not leverage a vector index for targeted retrieval across a corpus.
+- Commercial RAG products — powerful but often hosted and costly; this project focuses on an open, reproducible local-first approach with optional cloud inference.
+
+5. System Architecture
+High-level components:
+- Data Ingestion: Parses PDFs and text files and extracts textual content. Performs light cleaning and tokenization.
+- Chunker: Splits long documents into overlapping text chunks (e.g., 400–600 tokens with overlap) to preserve context for embeddings.
+- Embedding Model: Uses a sentence embedding model (e.g., all-MiniLM-L6-v2) to produce fixed-size vectors.
+- Vector Store: A FAISS index optimized for fast inner-product (cosine) retrieval across embeddings.
+- Retriever: Given a natural language query, computes an embedding and performs a nearest-neighbors lookup in FAISS to return top-k passages.
+- Generator: Uses a text generation model (either local seq2seq model or remote inference API) to synthesize study recommendations from retrieved passages.
+- API + Frontend: A simple FastAPI backend serving retrieval+generation endpoints and a static web UI for interactive use.
+
+6. Software and Hardware Requirements
+Software:
+- Python 3.10+; virtual environment recommended
+- Key Python packages: sentence-transformers, faiss-cpu, transformers, torch, fastapi, uvicorn, PyPDF2, requests
+Hardware:
+- For local experiments: a modern laptop or desktop with 8GB+ RAM; CPU-only operation is supported, but GPU accelerates model generation.
+- Disk space: depends on model caches and index size — allocate several gigabytes if downloading moderate-size generator models locally.
+
+7. Module Description
+1) Data Ingestion and Parsing
+   - Accepts PDFs and .txt files placed in a `data/` folder.
+   - Uses PyPDF2 to extract text from digital PDFs. OCR/scanned PDFs are supported via optional OCR pipelines (future scope).
+
+2) Chunking
+   - Text is split into overlapping chunks to retain local context, improving retrieval relevance for multi-sentence queries.
+
+3) Embedding and Indexing
+   - Embeddings are computed with a proven sentence-transformer model.
+   - FAISS stores normalized vectors for fast inner-product similarity searches.
+
+4) Retrieval
+   - A user query is embedded and the top-k most similar chunks are returned with source metadata (filename, chunk id).
+
+5) Generation / Suggestion Engine
+   - The retrieved passages are assembled into a structured prompt instructing the generator to output:
+     - A short list of key concepts (top 5)
+     - Three practice questions modeled on the retrieved content
+     - A short list of recommended resources
+   - The generator can run locally (transformers model) or remotely (Hugging Face Inference API) depending on environment configuration.
+
+6) API and UI
+   - A FastAPI backend exposes `/api/suggest` which accepts a query and returns retrieved passages and generated suggestions.
+   - A static single-page UI provides a responsive interface for entering queries, viewing retrieved passages, and reading suggestions.
+
+8. Data Flow and Process Diagrams (high level)
+- Ingest files → Extract text → Chunk text → Compute embeddings → Build FAISS index
+- Query flow: User query → Embed query → FAISS search → Retrieve passages → Generate suggestions → Return to user (CLI or UI)
+
+9. Database and Indexing Strategy
+- The system uses a lightweight metadata store (Python pickle) to keep mapping from FAISS row ids to chunk text and source file metadata. For production, replace with a persistent DB (Postgres, SQLite) or a managed vector DB (Pinecone, Weaviate) for durability and scaling.
+
+10. UML and Interface Design
+- Use-case: Student or Instructor submits a query; system returns concepts and practice material.
+- Sequence: Query → Retriever → Generator → Response. Frontend displays results and allows re-querying.
+
+11. Testing Strategy
+Unit tests and integration tests should cover:
+- Parsing and chunking logic (ensure no data-loss and consistent chunk overlap behavior).
+- Embedding reproducibility (same input produces stable vectors within tolerances).
+- Retriever correctness (nearest-neighbors returns relevant passages for known queries).
+- Generator prompt-handling and response parsing (validate expected headers like "Concepts" and "Practice Questions").
+
+Testing types to include:
+- Unit testing for utilities and small modules.
+- Integration tests that build a small index from sample files and validate end-to-end behavior.
+- Load testing: measure how many queries per minute the local stack can handle; optimize FAISS and batching as needed.
+
+12. Sample Interaction Flows
+- Example query: "Suggest important concepts and practice questions for past-year algebra and calculus questions."
+  - Retriever returns chunks that mention algebraic manipulation, differentiation, local maxima, and probability fundamentals.
+  - Generator outputs:
+    - Concepts: Algebraic equations, Quadratic factoring, Differentiation rules, Critical point analysis, Basic probability.
+    - Practice Questions: (3 tailored prompts modeled on the retrieved passages)
+    - Resources: Short list of official references and tutorials.
+
+13. Summary and Future Scope
+Summary:
+- The Question Analyzer project demonstrates how to combine semantic search with controlled generation to create a practical study-assistant tool. It emphasizes reproducibility, local-first operation, and ease of use with small datasets.
+
+Future scope (possible extensions):
+- Add OCR for scanned PDFs and mobile upload support.
+- Improve metadata extraction (question numbers, marks allocation, year tags) to enable time-series analysis of topic frequency.
+- Integrate a lightweight moderation and human-in-the-loop validation workflow so teachers can approve generated practice questions.
+- Provide persistent user profiles and personalized learning pathways that adapt to a student's performance on generated practice questions.
+- Support alternative generators or specialized prompt templates tuned for question synthesis (fine-tuned seq2seq models).
+- Build a multi-tenant cloud offering with a managed vector database and autoscaling inference.
+
+14. References
+- Reproducible RAG patterns: retrieval-augmented generation literature and Hugging Face examples.
+- FAISS documentation: efficient similarity search at scale.
+- SentenceTransformers project: pre-trained sentence embedding models for semantic search.
+
+Acknowledgements
+We acknowledge the support of our mentors and the Integrated MCA program at Utkal University, and the open-source communities whose libraries made this project possible.
+
+Developers:
+Ritik Ranjan Sahoo
+Satyabrata Swain
+Amitab Das
+Srinibash Sahoo
+
+Batch: 2021-2026, Integrated MCA, Utkal University
+
+Thank you!

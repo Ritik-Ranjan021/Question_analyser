@@ -45,6 +45,12 @@
           <textarea id="query" placeholder="e.g. suggest important concepts and practice questions"></textarea>
           <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
             <button id="run" class="btn">Suggest</button>
+            <button id="search_q" class="btn" style="background:linear-gradient(90deg,#0ea5a4,#0284c7)">Search Questions</button>
+            <button id="find_repeats" class="btn" style="background:linear-gradient(90deg,#f59e0b,#d97706)">Find Repeats</button>
+            <div style="display:flex;gap:8px;align-items:center">
+              <label class="small" style="margin:0">Top k</label>
+              <input id="top_k" type="number" min="1" max="20" value="5" style="width:64px;padding:6px;border-radius:6px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:inherit">
+            </div>
             <div id="status" class="small">Ready</div>
           </div>
         </div>
@@ -59,6 +65,14 @@
         <div class="panel">
           <label>Retrieved passages</label>
           <div id="retrieved"><div class="small">No results yet.</div></div>
+        </div>
+        <div class="panel" style="margin-top:12px">
+          <label>Question-level search</label>
+          <div id="q_results"><div class="small">No results yet.</div></div>
+        </div>
+        <div class="panel" style="margin-top:12px">
+          <label>Repeated questions</label>
+          <div id="repeats"><div class="small">No results yet.</div></div>
         </div>
         <div class="panel" style="margin-top:12px">
           <div class="small">Notes</div>
@@ -84,7 +98,7 @@
       suggestionsEl.textContent = '';
       retrievedEl.innerHTML = '';
       try{
-        const resp = await fetch('/api/suggest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})});
+        const resp = await fetch('/api/suggest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q, top_k: parseInt(document.getElementById('top_k').value || '5')})});
         if(!resp.ok){
           const txt = await resp.text();
           suggestionsEl.textContent = 'Error: '+ resp.status + ' ' + txt;
@@ -113,6 +127,49 @@
     }
 
     runBtn.addEventListener('click', suggest);
+    document.getElementById('search_q').addEventListener('click', async ()=>{
+      const q = document.getElementById('query').value.trim();
+      if(!q) return alert('Enter a query');
+      const topk = parseInt(document.getElementById('top_k').value || '5');
+      document.getElementById('search_q').disabled = true;
+      statusEl.innerHTML = '<span class="spinner"></span> Searching questions';
+      try{
+        const resp = await fetch('/api/questions/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q, top_k: topk})});
+        if(!resp.ok){ const txt = await resp.text(); document.getElementById('q_results').innerText = 'Error: '+resp.status+' '+txt; return; }
+        const data = await resp.json();
+        const el = document.getElementById('q_results'); el.innerHTML = '';
+        if(data.results && data.results.length){
+          data.results.forEach(r=>{
+            const d = document.createElement('div'); d.className='card';
+            d.innerHTML = `<strong>${r.source} — ${r.year || 'N/A'}</strong><div style="height:8px"></div>${(r.text||'').slice(0,800)}<div style="height:6px"></div><em>score: ${r.score.toFixed(3)}</em>`;
+            el.appendChild(d);
+          });
+        } else { el.innerHTML = '<div class="small">No question-level results.</div>'; }
+        statusEl.textContent = 'Done';
+      }catch(err){ document.getElementById('q_results').innerText = 'Request failed: '+err.message; statusEl.textContent='Error'; }
+      finally{ document.getElementById('search_q').disabled = false }
+    });
+
+    document.getElementById('find_repeats').addEventListener('click', async ()=>{
+      const topk = parseInt(document.getElementById('top_k').value || '5');
+      document.getElementById('find_repeats').disabled = true;
+      statusEl.innerHTML = '<span class="spinner"></span> Finding repeats';
+      try{
+        const resp = await fetch(`/api/questions/repeats?similarity_threshold=0.88&top_k=${topk}`);
+        if(!resp.ok){ const txt = await resp.text(); document.getElementById('repeats').innerText = 'Error: '+resp.status+' '+txt; return; }
+        const data = await resp.json();
+        const el = document.getElementById('repeats'); el.innerHTML = '';
+        if(data.pairs && data.pairs.length){
+          data.pairs.slice(0,50).forEach(p=>{
+            const d = document.createElement('div'); d.className='card';
+            d.innerHTML = `<strong>${p.q1_id} (${p.q1_year || 'N/A'})</strong> ↔ <strong>${p.q2_id} (${p.q2_year || 'N/A'})</strong><div style="height:6px"></div>score: ${p.score.toFixed(3)}<div style="height:8px"></div><div class="small">${p.q1_source} — ${p.q2_source}</div>`;
+            el.appendChild(d);
+          });
+        } else { el.innerHTML = '<div class="small">No repeats found at this threshold.</div>'; }
+        statusEl.textContent = 'Done';
+      }catch(err){ document.getElementById('repeats').innerText = 'Request failed: '+err.message; statusEl.textContent='Error'; }
+      finally{ document.getElementById('find_repeats').disabled = false }
+    });
     document.getElementById('query').addEventListener('keydown', (e)=>{ if(e.key==='Enter' && (e.ctrlKey || e.metaKey)) suggest(); });
   </script>
 </body>

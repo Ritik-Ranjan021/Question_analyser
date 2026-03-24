@@ -2,10 +2,21 @@ import argparse
 import pickle
 import faiss
 import numpy as np
+import requests
+import torch
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from sentence_transformers import SentenceTransformer
-from rag import load_index, retrieve, generate_suggestions
-import argparse
 import os
+import importlib.util
+
+# load local rag module explicitly
+_rag_path = os.path.join(os.path.dirname(__file__), "rag.py")
+spec = importlib.util.spec_from_file_location("local_rag", _rag_path)
+rag = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(rag)
+load_index = rag.load_index
+retrieve = rag.retrieve
+generate_suggestions = rag.generate_suggestions
 
 
 def load_index(index_path, meta_path):

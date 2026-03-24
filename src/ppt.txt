@@ -1,0 +1,206 @@
+E-Audio Gallery
+Under esteem guidance of:
+Mrs. 
+StitapragyanMohanty
+Presented by:
+Akash Kumar Gouda (Regd
+Naik (Regd
+Manasmita
+Lila Madhuri Sahoo (
+No. 217/16 )
+Regd
+No. 233/16 )
+Suchismita
+Subhashree
+Sahoo (Regd
+No.255/16 )
+Santy (Regd
+No. 259/16 )
+No. 262/16)
+Content
+1. Introduction
+2. Objectives
+3. Existing System
+4. Software and hardware Requirements
+5. Module description
+6. Process Model Diagram
+7. Database Diagram
+8. UML Diagrams
+9. Testing
+10.Sample from screenshots
+11.Summary and future scope
+Introduction
+• E- Audio Gallery is a Web application developed in Django framework using Python programming language.
+• We can feel the importance of audio in our daily life.
+• In today’s world, running behind the goals and responsibilities, we people sometimes fail to know when we 
+become the part of this rat race. 
+• Music acts like a medicine for the people who suffer from depression, anxiety which leads to severe health issues.
+• Our mood swings within less time. This project is strongly motivated from the fact that  predefined playlist may 
+not always be helpful. 
+• Speech is the most natural way to express our emotion. So, it is important to recognize the speech emotion to 
+recommend the songs accordingly.
+• People refresh themself by reading different type of books, watching movies, going outside for a holiday, listening 
+music etc. Among these refreshment activities music has the maximum impact on most of the people.
+• We listen music during workout section, while driving, while doing some official work or during bed time also.
+• Through this application user can choose audio books of his/her choice and listen music at any place and any time 
+with the access of internet. 
+• Sometimes we want to just lay down and listen someone reading the book. So we can choose audio books of our 
+choice and refresh ourselves.
+Objectives
+The main objectives of this project are:
+• To develop a music store where users can get songs as per their preferences and also 
+suggested song by analyzing their previous playlist.
+• This application can able to recognize the speech along with the emotions present in that speech 
+and according to the current emotion of the user songs are recommended.
+• Help the people to convert their English reading content in form of audio which can be listened in 
+Hindi and English as per the choice.
+• To help the music enthusiasts in checking different music genres.
+Existing System
+• AllMusic: Not customizable 
+• JioSaavn: Allows to browse songs according to artists, new releases, and albums. But no 
+recommendation for user.
+• Spotify: Good user accessibility features to play songs and recommends user with other songs 
+of similar genre without emotion-based music recommendation for user.
+• Musicovery: High quality songs and comprehensive music recommendations. But it also 
+suggests predefined play-list for the user.
+• Moodfuse: User should manually enter mood and genre that wants to be heard and mood fuse 
+recommends the songs-list.
+• Steromood: User should select his mood manually from the list and the application plays 
+music from YouTube. 
+Software and Hardware Systems
+Software Specification
+Operating System: Windows
+Framework: Django 2.2
+Programming Language: Python
+Front-end: HTML, CSS, Bootstrap
+Database: PostgreSQL
+Hardware Specification
+As this will be a Web app, a PC/Laptop with Windows 10 or higher with at least 4 GB of RAM and 
+integrated HD graphics 5500or higher is required.
+Module Description
+1. Accounts Creation:
+• Register: New user can signup using this module with valid details.
+• Login: After successfully registered, user can then login with his credentials.
+• MyProfile: User can update or  delete profile, change password or reset forgotten password 
+2. Admin: Admin has higher privileged. He can do all activities. He can add, modify, delete, view all the music and audio books, 
+reply feedbacks and user queries. 
+3. TestSpeechEmo: This module records user’s voice and detect its emotion using MLP Classifier algorithm. 
+4. Music:
+• EmotionBasedSong: It fetches the emotion detected and language and recommend songs based on emotion and selected 
+language.
+• ClassifyGenre: This module takes user query(audio file) and classifies the song genre using KNN classifier.
+• Recommended: It gives music recommendation by analyzing playlist of user (most liked genre type) 
+• PlayMusic: This module covers playing music of different genres, emotions, and artists in user selected language.
+5. AudioBook:
+• MakeAudioBook: This module takes pdf file of book in English language which user likes, with page number(from which page to 
+which page) the system will convert to audio and return audiobook version the same or of Hindi language.
+• PlayAudioBook: This module covers playing audiobook of different genres, emotions, and artists in user selected language.
+Process Model Diagram
+ER Diagram
+Database Design
+Level 0 DFD
+Data Flow Diagram
+Level 1 DFD
+Level 2 DFD
+Use case Diagram
+UML Diagrams
+Class Diagram
+Activity Diagram (User)
+Activity Diagram (Admin)
+Sequence Diagram
+(Admin)
+Sequence Diagram
+(User)
+Testing
+Testing is a process to show the correctness of the program. Testing is needed to show completeness, it 
+improve the quality of the software and to provide the maintenance aid.
+There are two approaches of test case design
+i) Blackbox Testing
+Blackbox testing or behavioral testing, focuses on the functional requirements of software. This testing attempts to find 
+the
+errors like- incorrect or missing functions, Interface errors, Errors in data structures or external database access, Behavior 
+or performance errors. Initialization and termination errors
+In Blackbox testing software is exercised over a full range of inputs and outputs are observed for correctness.
+ii) Whitebox Testing
+Whitebox or Glass box testing which is a test case design control structure of the procedural design to derive test cases. 
+Using Whitebox testing method, the software engineer can derive the test cases that guarantee that all independent 
+paths within the module have been exercised at least once. Exercise all logic decisions on their true and false sides. 
+Execute all loops at their boundaries and within their operational bounds. Exercise internal data structure to ensure their 
+validity.
+Testing involves
+a) Unit Testing
+Unit testing is a kind of testing of every unit of the software which is a part of the combined code and its phase. 
+It can however be done in two phases. And while developing  the three approaches are used namely the top 
+down, the bottom up and the isolation part but here in our chat system we are using the top down procedure. 
+…
+First we check for the first form where the names of the systems are correctly placed, there is individual test for 
+each machine learning algorithms used. Secondly we check for the secon-d form which consists of a Speech 
+emotion recognition part , third form is to check the text to audio conversion, next we check the music genre 
+classification ensuring a two way communication finally ensuring a successful testing.
+b) Integration Testing
+After the unit testing is done we are going to check if the modules are properly integrated.
+Integration testing is one of the agile methodologies of software testing where individual components or units of 
+code are tested to validate interactions among different software system modules. In this process, these system 
+components are either tested as a single group or organized iteratively.
+There are some common testing types may comes under integration testing
+System integration Testing: The term verification and the validation is done here. Verification means the 
+software for consistency which includes methods of reviewing and analyzing.
+Logical Testing: This is used to test every aspect of both report and query using valid, invalid and extreme 
+data . Sufficient data will be added to ensure that there is at least one entry in each category and adding new 
+data, which will be deleted later when the test works satisfactorily.
+Here we have tested situations like whether the songs and audio books are added to playlist not when user 
+choose that option.
+Functional Testing: Here the menu item is tested to ensure that nothing is missing out so that the app can 
+work well without any issue
+Sample from Snapshots
+
+
+
+
+
+
+
+
+
+
+Summary
+• In this modern era and busy lifestyle, music acts as a medicine and gives positive effect on health. There 
+are various apps or sites  like gaana.com, Spotify, JioSavan which fulfills our music requirements. But 
+apart of these, our project has some new features such as Voice-Emotion based music 
+recommendation, pdf to audio conversion in your preferred language(Hindi or English) and music 
+genre classification interfaces are provided.
+• Our project will help a lot to the people in identifying their current moods quickly then listening audio 
+accordingly and music of their favorite genres. Hence E- Audio Gallery is the prominent and useful 
+website for all music and audio book lovers.
+Future Scope
+In future Expansion, following features can be added for this Web-based application
+• As voice recognition based music is recommended, so we will train with large number of dataset and 
+apply different types of algorithm to increase accuracy of emotion recognition from the user.
+• Develop the android version of the application.
+• Adding payment options for different types of users.
+• cloud integration for more bandwidth storage.
+• Enhancing Security.
+References
+[1] Massarotto, Sofia. "Music streaming platforms and the evolution of the music industry." (2021).
+[2] Elbir, Ahmet, et al. "Music genre classification and recommendation by using machine learning techniques." 2018 
+Innovations in Intelligent Systems and Applications Conference (ASYU). IEEE, 2018.
+[3] Jahangir, Rashid, et al. "Deep learning approaches for speech emotion recognition: state of the art and research 
+challenges." Multimedia Tools and Applications (2021): 1-66.
+.python.org/doc
+[4] Speech Emotion Recognition using MLP Classifier, Sanjita. B. R1, Nipunika. A2, Rohita Desai3, Department of ECM, 
+Sreenidhi Institute of Technology and Science, Telangana, India
+[5] www
+[6] https://docs.djangoproject.com/en/3.2
+[7] Black Book- Server Programming
+[8] Software Engineering by Roger S. Pressman
+[9] www.w3schools.com
+[10] www.tutorialspoint.com
+[11] www
+.quora.com
+[12] www
+.spotify.com
+[13] www
+.allmusic.com
+[14] www.jiosaavn.com
+[15] moodfuse.com
+Thank You!
