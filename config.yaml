@@ -1,0 +1,51 @@
+# Question Analyzer Configuration
+# ================================
+
+# API & Server Settings
+server:
+  host: "0.0.0.0"
+  port: 8000
+  reload: false
+
+# Model Configuration
+models:
+  embedding:
+    name: "all-MiniLM-L6-v2"
+    device: "cpu"  # or "cuda" if CUDA is available
+  
+  generation:
+    provider: "groq"  # or "local"
+    name: "llama-3.1-8b-instant"
+    max_tokens: 300
+    temperature: 0.0
+
+# Database & Index Settings
+database:
+  index_path: "data/index.faiss"
+  metadata_path: "data/index_metadata.pkl"
+  question_index_path: "data/question_index.faiss"
+  question_meta_path: "data/questions_meta.jsonl"
+
+# Data Processing
+data:
+  input_folder: "data"
+  chunk_size: 500  # tokens per chunk
+  chunk_overlap: 100  # token overlap
+  supported_formats: [".txt", ".pdf"]
+
+# RAG Pipeline Settings
+rag:
+  top_k: 5  # default number of chunks to retrieve
+  provider: "groq"  # groq or local
+
+# Authentication Tokens
+tokens:
+  groq_api_key: ""  # Set via GROQ_API_KEY env var or groq_key.txt file
+  # If empty, will try to read from:
+  # 1. GROQ_API_KEY environment variable
+  # 2. groq_key.txt file in project root
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "logs/app.log"

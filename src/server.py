@@ -1,27 +1,54 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import uvicorn
 from sentence_transformers import SentenceTransformer
 import os
 import json
 import faiss
+import torch
 from typing import List
 import importlib.util
+import sys
+
+# Add src folder to path for module imports
+_src_path = os.path.dirname(os.path.abspath(__file__))
+if _src_path not in sys.path:
+    sys.path.insert(0, _src_path)
+
+# Import config first
+from config import get_config
 
 # Load local rag.py explicitly to avoid name conflict with pip package 'rag'
-_rag_path = os.path.join(os.path.dirname(__file__), "rag.py")
+_rag_path = os.path.join(_src_path, "rag.py")
 spec = importlib.util.spec_from_file_location("local_rag", _rag_path)
 rag = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(rag)
+
+# Load local build_index.py
+_build_path = os.path.join(_src_path, "build_index.py")
+spec_build = importlib.util.spec_from_file_location("local_build", _build_path)
+build_module = importlib.util.module_from_spec(spec_build)
+spec_build.loader.exec_module(build_module)
+
+# Import functions
 load_index = rag.load_index
 retrieve = rag.retrieve
-generate_suggestions = rag.generate_suggestions
+generate_answer = rag.generate_answer
+rag_pipeline = rag.rag_pipeline
+create_index_if_missing = build_module.create_index_if_missing
 
+# Get configuration
+cfg = get_config()
 
-QUESTION_INDEX_PATH = "data/question_index.faiss"
-QUESTION_META_PATH = "data/questions_meta.jsonl"
+# Global variables for models and indexes
+INDEX = None
+META = None
+EMBED_MODEL = None
+Q_INDEX = None
+Q_META = []
 
 
 class QueryReq(BaseModel):
@@ -29,43 +56,103 @@ class QueryReq(BaseModel):
     top_k: int = 5
 
 
+class ChatReq(BaseModel):
+    query: str
+    top_k: int = 5
+
+
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 
 
 @app.on_event("startup")
 def startup_event():
-    global INDEX, META, EMBED_MODEL
-    INDEX, META = load_index()
-    EMBED_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
-    # attempt to load question-level index and metadata
-    global Q_INDEX, Q_META
+    """Initialize indexes and models on startup."""
+    global INDEX, META, EMBED_MODEL, Q_INDEX, Q_META
+    
+    # Build the main index if it doesn't exist
+    print("Checking for vector database...")
+    create_index_if_missing(cfg.data_folder, cfg.index_path, cfg.metadata_path)
+    
+    # Load the main index
+    INDEX, META = load_index(cfg.index_path, cfg.metadata_path)
+    
+    # Determine device - use configured device if available, otherwise CPU
+    device = cfg.embedding_device
+    if device == "cuda" and not torch.cuda.is_available():
+        print("⚠️  CUDA not available, switching to CPU")
+        device = "cpu"
+    
+    EMBED_MODEL = SentenceTransformer(cfg.embedding_model, device=device)
+    
+    # Attempt to load question-level index and metadata (optional)
     Q_INDEX = None
     Q_META = []
     try:
-        if os.path.exists(QUESTION_INDEX_PATH) and os.path.exists(QUESTION_META_PATH):
-            Q_INDEX = faiss.read_index(QUESTION_INDEX_PATH)
-            with open(QUESTION_META_PATH, "r", encoding="utf-8") as f:
+        if os.path.exists(cfg.question_index_path) and os.path.exists(cfg.question_meta_path):
+            Q_INDEX = faiss.read_index(cfg.question_index_path)
+            with open(cfg.question_meta_path, "r", encoding="utf-8") as f:
                 for line in f:
                     Q_META.append(json.loads(line))
-    except Exception:
+            print(f"✓ Loaded question index with {Q_INDEX.ntotal} questions")
+    except Exception as e:
+        print(f"Could not load question index: {e}")
         Q_INDEX = None
         Q_META = []
+    
+    print("✓ Server initialized successfully!")
 
 
 @app.get("/")
 def root():
-    return {"message": "Question analyzer backend. Visit /static for the frontend."}
+    """Serve the frontpage as the default landing page."""
+    return FileResponse("static/frontpage.html", media_type="text/html")
+
+
+@app.get("/chatpage")
+def chatpage_route():
+    """Serve the chat page."""
+    return FileResponse("static/chatpage.html", media_type="text/html")
+
+
+@app.get("/api/home")
+def home():
+    return {"message": "Question Analyzer RAG Backend. Visit / for the frontend."}
+
+
+@app.post("/api/chat")
+def chat(req: ChatReq):
+    """
+    Chat endpoint: Uses RAG pipeline to answer questions based on vector database.
+    """
+    if INDEX is None:
+        raise HTTPException(status_code=400, detail="Vector database not initialized. Run build_index.py first.")
+    
+    if not req.query.strip():
+        raise HTTPException(status_code=400, detail="Query is empty.")
+    
+    # Ensure top_k is within reasonable limits
+    top_k = min(max(1, req.top_k), 20)
+    
+    # Run the RAG pipeline
+    result = rag_pipeline(
+        req.query,
+        index_path=cfg.index_path,
+        meta_path=cfg.metadata_path,
+        top_k=top_k
+    )
+    
+    return result
 
 
 @app.post("/api/suggest")
 def suggest(req: QueryReq):
+    """Legacy endpoint for backward compatibility."""
     if INDEX is None:
         raise HTTPException(status_code=400, detail="Index not found. Build with build_index.py and place in data/")
     retrieved = retrieve(INDEX, META, EMBED_MODEL, req.query, top_k=req.top_k)
-    suggestions = generate_suggestions(retrieved, req.query)
-    return {"retrieved": retrieved, "suggestions": suggestions}
+    answer = generate_answer(retrieved, req.query)
+    return {"retrieved": retrieved, "answer": answer}
 
 
 class SearchReq(BaseModel):
@@ -75,6 +162,7 @@ class SearchReq(BaseModel):
 
 @app.post("/api/questions/search")
 def question_search(req: SearchReq):
+    """Search for similar questions in the question index."""
     if Q_INDEX is None or not Q_META:
         raise HTTPException(status_code=400, detail="Question index not found. Build with indexer.py")
     q_emb = EMBED_MODEL.encode([req.query], convert_to_numpy=True)
@@ -123,5 +211,49 @@ def question_repeats(similarity_threshold: float = 0.88, top_k: int = 5):
     return {"pairs": repeats}
 
 
+@app.get("/api/status")
+def status():
+    """Check if the vector database is initialized."""
+    return {
+        "vector_db_ready": INDEX is not None,
+        "num_chunks": INDEX.ntotal if INDEX is not None else 0,
+        "question_index_ready": Q_INDEX is not None,
+        "num_questions": len(Q_META) if Q_META else 0,
+        "config": {
+            "embedding_model": cfg.embedding_model,
+            "generation_model": cfg.generation_model,
+            "index_path": cfg.index_path,
+            "data_folder": cfg.data_folder
+        }
+    }
+
+
+@app.get("/api/config")
+def get_app_config():
+    """Get current application configuration."""
+    return {
+        "server": {"host": cfg.server_host, "port": cfg.server_port},
+        "models": {
+            "embedding": cfg.embedding_model,
+            "generation": cfg.generation_model,
+            "generation_provider": cfg.generation_provider,
+            "device": cfg.embedding_device
+        },
+        "database": {
+            "index_path": cfg.index_path,
+            "metadata_path": cfg.metadata_path,
+            "data_folder": cfg.data_folder
+        },
+        "rag": {
+            "top_k": cfg.rag_top_k,
+            "provider": cfg.rag_provider
+        }
+    }
+
+
+# Mount static files AFTER all API routes (important for route precedence)
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
+    uvicorn.run(app, host=cfg.server_host, port=cfg.server_port, reload=False)

@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Question Analyzer — Chat</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --navy:#0f1c38;
+  --dark:#0a1628;
+  --teal:#0d9488;
+  --teal2:#14b8a6;
+  --teal3:#5eead4;
+  --muted:#94a3b8;
+  --border:rgba(13,148,136,.25);
+}
+
+/* GLOBAL */
+body{
+  margin:0;
+  font-family:'DM Sans',sans-serif;
+  background:var(--dark);
+  color:white;
+}
+
+/* NAV */
+nav{
+  position:fixed;
+  top:0;left:0;right:0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:1rem 2rem;
+  background:rgba(10,22,40,.9);
+  border-bottom:1px solid var(--border);
+  z-index:100;
+}
+
+.nav-logo{
+  font-family:'Syne',sans-serif;
+  font-weight:800;
+  text-decoration:none;
+  color:white;
+}
+.nav-logo span{color:var(--teal2)}
+
+.nav-cta{
+  background:var(--teal2);
+  color:var(--dark);
+  padding:.5rem 1.2rem;
+  border-radius:6px;
+  text-decoration:none;
+  font-weight:700;
+}
+
+/* BACKGROUND */
+.bg-glow{
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(13,148,136,.15), transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(20,184,166,.1), transparent 50%);
+  z-index:-1;
+}
+
+/* MAIN */
+.container{
+  max-width:800px;
+  margin:0 auto;
+  padding:100px 20px 40px;
+}
+
+/* PANEL */
+.panel{
+  background:rgba(13,148,136,.05);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:20px;
+  backdrop-filter:blur(12px);
+}
+
+/* TEXT */
+h1{
+  font-family:'Syne';
+  font-size:1.4rem;
+  margin-bottom:0.5rem;
+}
+
+label{
+  font-size:.8rem;
+  color:var(--muted);
+  display:block;
+  margin-bottom:0.5rem;
+}
+
+/* INPUT */
+textarea{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  background:#0b1626;
+  border:1px solid rgba(255,255,255,.05);
+  color:white;
+  font-family:inherit;
+  font-size:0.95rem;
+  resize:vertical;
+  min-height:100px;
+}
+
+textarea:focus{
+  outline:none;
+  border-color:var(--teal2);
+  box-shadow:0 0 0 2px rgba(20,184,166,.1);
+}
+
+/* BUTTON */
+.btn{
+  padding:12px 20px;
+  border:none;
+  border-radius:8px;
+  font-weight:600;
+  cursor:pointer;
+  color:white;
+  background:linear-gradient(90deg,var(--teal),var(--teal2));
+  transition:transform 0.15s, opacity 0.2s;
+}
+
+.btn:hover:not(:disabled){
+  transform:translateY(-2px);
+}
+
+.btn:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+}
+
+/* OUTPUT */
+.output-box{
+  background:#0b1626;
+  padding:16px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.05);
+  min-height:100px;
+  white-space:pre-wrap;
+  word-wrap:break-word;
+  line-height:1.6;
+}
+
+/* STATUS */
+.status{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:10px;
+}
+
+/* SPINNER */
+.spinner{
+  display:inline-block;
+  width:12px;height:12px;
+  border:2px solid rgba(255,255,255,.2);
+  border-top-color:white;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin-right:6px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.small{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="bg-glow"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">Question<span>Analyzer</span></a>
+  <a href="/" class="nav-cta">← Home</a>
+</nav>
+
+<div class="container">
+
+<header style="margin-bottom:30px">
+  <h1>🤖 AI Study Assistant</h1>
+  <div class="small">Ask any question and get instant answers based on your study materials</div>
+</header>
+
+<!-- CHAT PANEL -->
+<div class="panel" style="margin-bottom:20px">
+  <label for="query">Your Question</label>
+  <textarea id="query" placeholder="e.g. What is left recursion in compiler design?"></textarea>
+
+  <div style="margin-top:15px;display:flex;gap:10px;align-items:center">
+    <button id="run" class="btn">Get Answer</button>
+    <div id="status" class="status"></div>
+  </div>
+</div>
+
+<!-- ANSWER PANEL -->
+<div class="panel">
+  <label for="answer">Answer</label>
+  <div class="output-box" id="answer">Ask a question to get started...</div>
+</div>
+
+</div>
+
+<script>
+const runBtn = document.getElementById('run');
+const statusEl = document.getElementById('status');
+const answerEl = document.getElementById('answer');
+const queryEl = document.getElementById('query');
+
+async function getAnswer(){
+  const q = queryEl.value.trim();
+  if(!q) return alert('Please enter a question');
+
+  runBtn.disabled = true;
+  statusEl.innerHTML = '<span class="spinner"></span>Searching...';
+  answerEl.textContent = 'Processing...';
+
+  try{
+    const resp = await fetch('/api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({query:q, top_k:5})
+    });
+
+    if(!resp.ok){
+      answerEl.textContent = `Error: ${resp.status} ${resp.statusText}`;
+      statusEl.textContent = '❌ Error';
+      return;
+    }
+
+    const data = await resp.json();
+    
+    if(data.success){
+      answerEl.textContent = data.answer || 'No answer generated';
+      statusEl.textContent = `✓ Done (Retrieved ${data.num_chunks} sources)`;
+    } else {
+      answerEl.textContent = data.answer || 'Error generating answer';
+      statusEl.textContent = '❌ Error';
+    }
+
+  }catch(err){
+    answerEl.textContent = 'Error: ' + err.message;
+    statusEl.textContent = '❌ Error';
+  }
+
+  runBtn.disabled = false;
+}
+
+runBtn.addEventListener('click', getAnswer);
+
+// Allow Ctrl+Enter to submit
+queryEl.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter' && (e.ctrlKey||e.metaKey)){
+    e.preventDefault();
+    getAnswer();
+  }
+});
+</script>
+
+</body>
+</html>
