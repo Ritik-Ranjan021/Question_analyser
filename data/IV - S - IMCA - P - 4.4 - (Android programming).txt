@@ -1,0 +1,48 @@
+IV - S - IMCA - P - 4.4 - (Android Programming)2024
+Full Marks - 70Time - As in the Programme.
+Group - A
+ 1(a) What is View in Android?
+(b) Give examples of wireless technology supported by android.
+(c) Define a Activity in Android OS.
+(d) State the use of drawable folder in Android studio.
+(e) The first Android app version is ______.
+(f) Define polymorphism.
+(g) What is the use of activity_main file in Android studio.
+(h) Write the methods used to implement multithreading in java.
+(i) Write the syntax for displaying a background image in a activity.
+(j) What is ahead of time compilation?
+
+Group - B. 
+2(a) What features are used in Android studio application to design and build an activity? [4]
+(b) State how Android is different from Windows. [6]
+(c) Write the default features available in Android for end users. [5]
+
+OR
+
+(d) Discuss the role of kernel in Android OS. State the run time libraries available in Android OS. [6]
+(e) State the features of Activity and Resource manager in Android. [5]
+(f) Write the xml attributes for TextView view in Android studio. [4]
+
+3.(a) Write a program to implement multilevel inheritance. Use super keyword. [7.5]
+(b) Write a program in Java to create an Interface X and a class Y. The class will implement the interface and define its function that are declared in the Interface. [7.5]
+
+OR
+
+(c) Discuss the following: [3.5 x 2]
+Ambiguity
+Function overriding
+(d) Define Multithreading. Write a program in java to implement multithreading. Use Runnable interface. [8]
+
+4. (a) Write a program to create an Activity with User name and password and 2 button submit and reset. Use on click event handling after clicking the given buttons. [9]
+(b) Write a program to display a text on clicking a button in a Edit Text view. [6]
+
+OR
+
+(c) State the purpose of Main Activity file in Android Studio. Write the steps followed to import views in Main Activity. [7.5]
+(d) Write a program to jump from a Main Activity to next Activity on button click. [7.5]
+
+5. (a) Explain various features of SQL lite database application. [15]
+
+OR
+
+(b) Diagrammatically explain the Android activity lifecycle with its respective functions. [15]
